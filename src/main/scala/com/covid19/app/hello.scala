@@ -88,7 +88,7 @@ object hello {
             case _ => false
         }).cache()
 
-        // Gives Number of (confirmed - recovered - deceased) for each day for all states
+        // Gives Number of (confirmed - recovered - deceased) for each day for all states hi testing
         val delta = covidMap(confirmed, recovered, deceased)((x, y, z) => x - y - z)
 
         //Gives (confirmed^2 - recovered^2 - deceased^2 / confirmed^2 + recovered^2 + deceased^2) for all states
