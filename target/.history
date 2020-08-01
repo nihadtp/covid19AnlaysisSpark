@@ -1,0 +1,30 @@
+clean ; run
+run
+runrun
+run
+Exception in thread "main" org.apache.spark.SparkException: Task not serializable
+run
+console
+run
+console
+run
+reload
+run
+compile
+sbt reload
+:reload
+help
+reload
+compile~
+compile  ~
+compile  
+run
+help
+reload
+compile
+run
+formatted("dd-MMM-YY")
+compile
+run
+console
+run

@@ -1,0 +1,4 @@
+[debug] [covid19-test] Classpath dependencies List()
+[debug] [covid19-test] Dependencies from configurations List(covid19)
+[debug] Bloop wrote the configuration of project 'covid19-test' to '/home/nihad/covid19/.bloop/covid19-test.json'
+[success] Generated .bloop/covid19-test.json
