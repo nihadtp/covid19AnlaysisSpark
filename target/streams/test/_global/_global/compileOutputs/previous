@@ -1,1 +1,1 @@
-["sbt.Task[scala.collection.Seq[java.nio.file.Path]]",["/home/nihad/covid19/target/streams/test/compileOutputs/_global/streams/inc_compile_2.12.zip"]]
+["sbt.Task[scala.collection.Seq[java.nio.file.Path]]",["/home/nihad/covid19/target/scala-2.12/test-classes/com/covid19/inputOutput$.class","/home/nihad/covid19/target/scala-2.12/test-classes/com/covid19/inputOutput.class","/home/nihad/covid19/target/scala-2.12/test-classes/main_Test.class","/home/nihad/covid19/target/streams/test/compileOutputs/_global/streams/inc_compile_2.12.zip"]]

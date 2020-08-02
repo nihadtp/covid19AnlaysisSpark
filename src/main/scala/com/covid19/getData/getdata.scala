@@ -13,7 +13,6 @@ import scala.util.{ Failure, Success }
 object getdata {
     implicit val system = ActorSystem()
     implicit val materializer = ActorMaterializer()
-    // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.dispatcher
 
     val url = "https://api.covid19india.org/states_daily.json"
