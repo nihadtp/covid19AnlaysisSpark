@@ -12,7 +12,34 @@ abstract class allStatusData(
     def getProp(): String = prop
     def getDate(): String = date.toString()
     def getStateValue: Map[String, Float] = stateCodeValueMap
-    def dateValue = date
+    def dateValue :DateTime= date
+
+    def maxValue  : Float = {
+        if(stateCodeValueMap.contains("tt")) stateCodeValueMap.-("tt").valuesIterator.max
+        else 0
+    }
+    def maxValueStates : List[String] = {
+       var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]() 
+       stateCodeValueMap.foreach(k =>  listOfTuples += ((k._1, k._2)))
+       val reversKey = listOfTuples.toList.map(kv => (kv._2, kv._1))
+       val groupedKey = reversKey.groupBy(key => key._1)
+       val g = groupedKey.map(x => (x._1, x._2.map(x => x._2)))
+       g.getOrElse(maxValue, List(""))
+    }
+
+    def minValue: Float = {
+       if(stateCodeValueMap.contains("tt")) stateCodeValueMap.-("tt").valuesIterator.min
+        else 0 
+    }
+
+    def minValueStates : List[String] = {
+       var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]() 
+       stateCodeValueMap.foreach(k =>  listOfTuples += ((k._1, k._2)))
+       val reversKey = listOfTuples.toList.map(kv => (kv._2, kv._1))
+       val groupedKey = reversKey.groupBy(key => key._1)
+       val g = groupedKey.map(x => (x._1, x._2.map(x => x._2)))
+       g.getOrElse(minValue, List(""))
+    }
 }
 
 case class Confirmed(stateCodeValueMap: Map[String, Float], date: DateTime) 

@@ -99,9 +99,10 @@ object hello {
         })
 
         
-        delta_square.take(100).foreach(data => println(data.getStateValue.get("kl") + ", " + data.getProp() + ", " + data.dateValue.toString(format)))
+        delta.take(100).foreach(data => println(data.maxValueStates + ", " + data.getProp() + ", " + data.dateValue.toString(format)))
         sc.stop()
        
     }
+
     
 }
