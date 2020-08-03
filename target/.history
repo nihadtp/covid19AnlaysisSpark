@@ -43,3 +43,5 @@ run
 test
 stateCodeValueMaprun
 run
+compile
+console

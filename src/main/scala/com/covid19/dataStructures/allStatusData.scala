@@ -16,7 +16,7 @@ abstract class allStatusData(
 
     def maxValue  : Float = {
         if(stateCodeValueMap.contains("tt")) stateCodeValueMap.-("tt").valuesIterator.max
-        else 0
+        else stateCodeValueMap.valuesIterator.max
     }
     def maxValueStates : List[String] = {
        var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]() 
@@ -29,7 +29,7 @@ abstract class allStatusData(
 
     def minValue: Float = {
        if(stateCodeValueMap.contains("tt")) stateCodeValueMap.-("tt").valuesIterator.min
-        else 0 
+        else stateCodeValueMap.valuesIterator.min
     }
 
     def minValueStates : List[String] = {
