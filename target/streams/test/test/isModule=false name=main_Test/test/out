@@ -1,8 +1,0 @@
-[0m[[0m[0minfo[0m] [0m[0m[32mmain_Test:[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[32m- Check proper JSON Conversion[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[32m- Check dataStructure to case class conversion[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[32m- Testing max value of property on a day[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[31m- Testing for getting list of stat code for the highest value for a property *** FAILED ***[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[31m  List("kl") did not equal List("kl3") (main_Test.scala:35)[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[31m  Analysis:[0m[0m
-[0m[[0m[0minfo[0m] [0m[0m[31m  List(0: kl -> kl3)[0m[0m

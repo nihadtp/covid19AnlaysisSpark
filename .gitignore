@@ -1,5 +1,5 @@
 .bloop
 .vscode
 .metals
-/target/.history
-/target/streams/*
+target/.history
+target/streams/*
