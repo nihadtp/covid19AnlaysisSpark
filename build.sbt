@@ -6,4 +6,6 @@ libraryDependencies += "joda-time" % "joda-time" % "2.10.6"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.0"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0" % "test"
 libraryDependencies += "org.scalatest" %% "scalatest-funsuite" % "3.2.0" % "test"
+libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.5.1"
+
 

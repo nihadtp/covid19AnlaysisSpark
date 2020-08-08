@@ -21,6 +21,10 @@ import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormat
 import covid19.stateStatus
 import scala.math.pow
+import com.datastax.spark.connector._
+import com.datastax.spark.connector.cql.CassandraConnector
+
+
 
 object hello {
 
@@ -53,14 +57,26 @@ object hello {
 
        // Logger.getLogger("org").setLevel(Level.ERROR)
         val log = Logger.getRootLogger()
-        val input = (new FileInputStream("src/main/resources/log4j.properties")).asInstanceOf[InputStream]
+        val inputForLog = (new FileInputStream("src/main/resources/log4j.properties")).asInstanceOf[InputStream]
+        val inputForCassandra = (new FileInputStream("src/main/scala/com/covid19/app/cassandra.properties")).asInstanceOf[InputStream]
         val property = new ju.Properties
-        property.load(input)
-        PropertyConfigurator.configure(input)
+        property.load(inputForLog)
+        PropertyConfigurator.configure(inputForLog)
+        val cassandraConf = new ju.Properties
+        cassandraConf.load(inputForCassandra)
+
+        log.warn(cassandraConf.getProperty("cassandra.host") )
+
+
         val conf = new SparkConf()  
             .setMaster("local[*]")
             .setAppName("covid19")
+            .set("spark.cassandra.connection.host", cassandraConf.getProperty("cassandra.host"))
+           
         val sc = new SparkContext(conf)
+        
+        val session = CassandraConnector(conf)
+        
         val data = getdata.applyVal()
         val listOfParsedJson = new jsonConvertor(data).convert()
 
