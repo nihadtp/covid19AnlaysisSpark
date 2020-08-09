@@ -7,8 +7,7 @@ import org.apache.log4j._
 import covid19.getdata
 import covid19.jsonConvertor
 import covid19.dataStructure
-import org.joda.time.DateTime
-import  covid19.allStatusData
+import covid19.allStatusData
 import covid19.Confirmed
 import covid19.Recovered
 import covid19.Deceased
@@ -17,12 +16,11 @@ import covid19.BadData
 import java.{util => ju}
 import _root_.java.io.InputStream
 import java.io.FileInputStream
-import org.joda.time.format.DateTimeFormatter
-import org.joda.time.format.DateTimeFormat
 import covid19.stateStatus
 import scala.math.pow
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.cql.CassandraConnector
+import com.covid19.cassandra.cassandraMethods
 
 
 
@@ -51,8 +49,6 @@ object hello {
             
     }
     
-    val format = DateTimeFormat.forPattern("dd-MMM-YY")
-    
     def main(args: Array[String]) {
 
        // Logger.getLogger("org").setLevel(Level.ERROR)
@@ -65,18 +61,16 @@ object hello {
         val cassandraConf = new ju.Properties
         cassandraConf.load(inputForCassandra)
 
-        log.warn(cassandraConf.getProperty("cassandra.host") )
-
 
         val conf = new SparkConf()  
             .setMaster("local[*]")
             .setAppName("covid19")
             .set("spark.cassandra.connection.host", cassandraConf.getProperty("cassandra.host"))
+            .set("spark.cassandra.connection.port", cassandraConf.getProperty("cassandra.port"))
+            
            
         val sc = new SparkContext(conf)
-        
-        val session = CassandraConnector(conf)
-        
+        val connector = CassandraConnector(conf)
         val data = getdata.applyVal()
         val listOfParsedJson = new jsonConvertor(data).convert()
 
@@ -113,9 +107,11 @@ object hello {
             val f = x.toDouble; val s = y.toDouble; val t = z.toDouble;
             (pow(f, 2) - pow(s, 2) - pow(t, 2)).toFloat/(math.sqrt(pow(f, 2) + pow(s, 2) + pow(t, 2))).toFloat
         })
-
         
-        delta.take(100).foreach(data => println(data.maxValueStates + ", " + data.getProp() + ", " + data.dateValue.toString(format)))
+        delta.foreach(data => {
+            cassandraMethods.cassandraWrite(connector, data)
+        })
+        log.warn("Data write to cassandra is completed. Can cancel execution now.")
         sc.stop()
        
     }
