@@ -22,99 +22,131 @@ import com.datastax.spark.connector._
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.covid19.cassandra.cassandraMethods
 
-
-
 object hello {
 
-    def covidMap(rdd1: RDD[allStatusData], 
-        rdd2: RDD[allStatusData], 
-        rdd3: RDD[allStatusData])(f: (Float, Float, Float) => Float): RDD[allStatusData] = {
-            
-            val cartesian = rdd1.cartesian(rdd2).cartesian(rdd3).filter(triplet => {
-                val operand1 = triplet._1._1
-                val operand2 = triplet._1._2
-                val operand3 = triplet._2
-                val hasSameDate = operand1.dateValue.isEqual(operand2.dateValue) && 
-                    operand2.dateValue.isEqual(operand3.dateValue)
-                hasSameDate
-            })
-            
-            cartesian.map(data => {
-                val status1 = data._1._1
-                val status2 = data._1._2
-                val status3 = data._2
+  def covidMap(
+      rdd1: RDD[allStatusData],
+      rdd2: RDD[allStatusData],
+      rdd3: RDD[allStatusData]
+  )(f: (Float, Float, Float) => Float): RDD[allStatusData] = {
 
-                operate(status1, status2, status3)(f)
-            })
-            
-    }
-    
-    def main(args: Array[String]) {
+    val cartesian = rdd1
+      .cartesian(rdd2)
+      .cartesian(rdd3)
+      .filter(triplet => {
+        val operand1 = triplet._1._1
+        val operand2 = triplet._1._2
+        val operand3 = triplet._2
+        val hasSameDate = operand1.dateValue.isEqual(operand2.dateValue) &&
+          operand2.dateValue.isEqual(operand3.dateValue)
+        hasSameDate
+      })
 
-       // Logger.getLogger("org").setLevel(Level.ERROR)
-        val log = Logger.getRootLogger()
-        val inputForLog = (new FileInputStream("src/main/resources/log4j.properties")).asInstanceOf[InputStream]
-        val inputForCassandra = (new FileInputStream("src/main/scala/com/covid19/app/cassandra.properties")).asInstanceOf[InputStream]
-        val property = new ju.Properties
-        property.load(inputForLog)
-        PropertyConfigurator.configure(inputForLog)
-        val cassandraConf = new ju.Properties
-        cassandraConf.load(inputForCassandra)
+    cartesian.map(data => {
+      val status1 = data._1._1
+      val status2 = data._1._2
+      val status3 = data._2
 
+      operate(status1, status2, status3)(f)
+    })
 
-        val conf = new SparkConf()  
-            .setMaster("local[*]")
-            .setAppName("covid19")
-            .set("spark.cassandra.connection.host", cassandraConf.getProperty("cassandra.host"))
-            .set("spark.cassandra.connection.port", cassandraConf.getProperty("cassandra.port"))
-            
-           
-        val sc = new SparkContext(conf)
-        val connector = CassandraConnector(conf)
-        val data = getdata.applyVal()
-        val listOfParsedJson = new jsonConvertor(data).convert()
+  }
 
-        val rdd = sc.parallelize(listOfParsedJson, 4)
-        val dataStruct = rdd.map(mapObject => {
-            val dataObject = new stateStatus(mapObject)
-            dataObject
-        })
-        log.warn("Created dataStruc1")
+  def main(args: Array[String]) {
 
-        val confirmedRecoveredDeceased = dataStruct.map(data => allStatusData(data.stateInfo.toMap, data.status, data.date)) 
-        
-        val confirmed = confirmedRecoveredDeceased.filter( data => data match {
-            case Confirmed(_, _) => true
-            case _ => false
-        }).cache()
+    // Logger.getLogger("org").setLevel(Level.ERROR)
+    val log = Logger.getRootLogger()
+    val inputForLog =
+      (new FileInputStream("src/main/resources/log4j.properties"))
+        .asInstanceOf[InputStream]
+    val inputForCassandra = (new FileInputStream(
+      "src/main/scala/com/covid19/app/cassandra.properties"
+    )).asInstanceOf[InputStream]
+    val property = new ju.Properties
+    property.load(inputForLog)
+    PropertyConfigurator.configure(inputForLog)
+    val cassandraConf = new ju.Properties
+    cassandraConf.load(inputForCassandra)
 
-        val recovered = confirmedRecoveredDeceased.filter( data => data match {
-            case Recovered(_, _) => true
-            case _ => false
-        }).cache()
+    val conf = new SparkConf()
+      .setMaster("local[*]")
+      .setAppName("covid19")
+      .set(
+        "spark.cassandra.connection.host",
+        cassandraConf.getProperty("cassandra.host")
+      )
+      .set(
+        "spark.cassandra.connection.port",
+        cassandraConf.getProperty("cassandra.port")
+      )
 
-        val deceased = confirmedRecoveredDeceased.filter( data => data match {
-            case Deceased(_, _) => true
-            case _ => false
-        }).cache()
+    val sc = new SparkContext(conf)
+    val connector = CassandraConnector(conf)
+    val data = getdata.applyVal()
+    val listOfParsedJson = new jsonConvertor(data).convert()
 
-        // Gives Number of (confirmed - recovered - deceased) for each day for all states hi testing
-        val delta = covidMap(confirmed, recovered, deceased)((x, y, z) => x - y - z)
+    val rdd = sc.parallelize(listOfParsedJson, 4)
+    val dataStruct = rdd.map(mapObject => {
+      val dataObject = new stateStatus(mapObject)
+      dataObject
+    })
+    log.warn("Created dataStruc1")
 
-        //Gives (confirmed^2 - recovered^2 - deceased^2 / confirmed^2 + recovered^2 + deceased^2) for all states
+    val confirmedRecoveredDeceased = dataStruct.map(data =>
+      allStatusData(data.stateInfo.toMap, data.status, data.date)
+    )
 
-        val delta_square  = covidMap(confirmed, recovered, deceased)((x, y, z) => {
-            val f = x.toDouble; val s = y.toDouble; val t = z.toDouble;
-            (pow(f, 2) - pow(s, 2) - pow(t, 2)).toFloat/(math.sqrt(pow(f, 2) + pow(s, 2) + pow(t, 2))).toFloat
-        })
-        
-        delta.foreach(data => {
-            cassandraMethods.cassandraWrite(connector, data)
-        })
-        log.warn("Data write to cassandra is completed. Can cancel execution now.")
-        sc.stop()
-       
-    }
+    val confirmed = confirmedRecoveredDeceased
+      .filter(data =>
+        data match {
+          case Confirmed(_, _) => true
+          case _               => false
+        }
+      )
+      .cache()
 
-    
+    val recovered = confirmedRecoveredDeceased
+      .filter(data =>
+        data match {
+          case Recovered(_, _) => true
+          case _               => false
+        }
+      )
+      .cache()
+
+    val deceased = confirmedRecoveredDeceased
+      .filter(data =>
+        data match {
+          case Deceased(_, _) => true
+          case _              => false
+        }
+      )
+      .cache()
+
+    // Gives Number of (confirmed - recovered - deceased) for each day for all states hi testing
+    val delta = covidMap(confirmed, recovered, deceased)((x, y, z) => x - y - z)
+
+    //Gives (confirmed^2 - recovered^2 - deceased^2 / confirmed^2 + recovered^2 + deceased^2) for all states
+
+    val delta_square = covidMap(confirmed, recovered, deceased)((x, y, z) => {
+      val f = x.toDouble; val s = y.toDouble; val t = z.toDouble;
+      (pow(f, 2) - pow(s, 2) - pow(t, 2)).toFloat / (math
+        .sqrt(pow(f, 2) + pow(s, 2) + pow(t, 2)))
+        .toFloat
+    })
+
+    delta.foreachPartition(partition => {
+
+      val session = connector.openSession()
+      partition.foreach(data => {
+        cassandraMethods.cassandraWrite(session, data)
+      })
+      session.close()
+    })
+    log.warn("Data write to cassandra is completed. Can cancel execution now.")
+
+    sc.stop()
+
+  }
+
 }
