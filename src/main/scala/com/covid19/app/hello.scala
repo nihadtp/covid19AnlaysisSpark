@@ -30,6 +30,8 @@ object hello {
       rdd3: RDD[allStatusData]
   )(f: (Float, Float, Float) => Float): RDD[allStatusData] = {
 
+    /* Takes in 3 rdd of allStatus data get triple product and filter those having 
+    data available for same date*/
     val cartesian = rdd1
       .cartesian(rdd2)
       .cartesian(rdd3)
@@ -90,7 +92,7 @@ object hello {
       val dataObject = new stateStatus(mapObject)
       dataObject
     })
-    log.warn("Created dataStruc1")
+    log.warn("Created dataStructure")
 
     val confirmedRecoveredDeceased = dataStruct.map(data =>
       allStatusData(data.stateInfo.toMap, data.status, data.date)
@@ -123,7 +125,7 @@ object hello {
       )
       .cache()
 
-    // Gives Number of (confirmed - recovered - deceased) for each day for all states hi testing
+    // Gives Number of (confirmed - recovered - deceased) for each day for all states 
     val delta = covidMap(confirmed, recovered, deceased)((x, y, z) => x - y - z)
 
     //Gives (confirmed^2 - recovered^2 - deceased^2 / confirmed^2 + recovered^2 + deceased^2) for all states

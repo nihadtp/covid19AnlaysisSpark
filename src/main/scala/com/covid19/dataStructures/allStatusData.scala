@@ -18,11 +18,18 @@ abstract class allStatusData(
       stateCodeValueMap.-("tt").valuesIterator.max
     else stateCodeValueMap.valuesIterator.max
   }
+
   def maxValueStates: List[String] = {
     var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]()
+
+    // Converting Map into Tuple of (String, Float)
     stateCodeValueMap.foreach(k => listOfTuples += ((k._1, k._2)))
+
+    // Reversing key value pair from (String, Float) to (Float, String)
     val reversKey = listOfTuples.toList.map(kv => (kv._2, kv._1))
     val groupedKey = reversKey.groupBy(key => key._1)
+
+    // Group By Key and determining List of states that has maximum value
     val g = groupedKey.map(x => (x._1, x._2.map(x => x._2)))
     g.getOrElse(maxValue, List(""))
   }
@@ -35,9 +42,15 @@ abstract class allStatusData(
 
   def minValueStates: List[String] = {
     var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]()
+
+    // Converting Map into Tuple of (String, Float)
     stateCodeValueMap.foreach(k => listOfTuples += ((k._1, k._2)))
+
+    // Reversing key value pair from (String, Float) to (Float, String)
     val reversKey = listOfTuples.toList.map(kv => (kv._2, kv._1))
     val groupedKey = reversKey.groupBy(key => key._1)
+
+    // Group By Key and determining List of states that has minimum value
     val g = groupedKey.map(x => (x._1, x._2.map(x => x._2)))
     g.getOrElse(minValue, List(""))
   }
