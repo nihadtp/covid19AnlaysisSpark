@@ -10,11 +10,14 @@ import com.datastax.spark.connector.CassandraSparkExtensions
 import com.datastax.oss.driver.api.core.DriverException
 import com.datastax.oss.driver.api.core.NoNodeAvailableException
 import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder
+import com.datastax.oss.driver.api.querybuilder.term.Term
+import com.datastax.oss.protocol.internal.request.query.QueryOptions
 
 object cassandraMethods {
 
   val log = Logger.getRootLogger()
-  val workspace = "covid19"
+  val keySpace = "covid19"
   val table = "delta_by_states"
   val formatter = DateTimeFormat.forPattern("YYYY-MM-dd")
 
@@ -26,14 +29,16 @@ object cassandraMethods {
       stateCode.foreach(kv => {
         val state_code = kv._1
         val state_value = kv._2
+        
         log.warn(
           "Writing %s state code with value %s on date %s"
             .format(state_code, state_value, dateTime)
         )
+        
         session.execute(
-          """INSERT INTO %s.%s ( state_code, state_value, date )
+          """INSERT INTO "%s".%s ( state_code, state_value, date )
             VALUES ('%s', %s, '%s');"""
-            .format(workspace, table, state_code, state_value, dateTime)
+            .format(keySpace, table, state_code, state_value, dateTime),
         )
       })
     } catch {
