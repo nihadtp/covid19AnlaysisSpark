@@ -14,7 +14,7 @@ class main_Test extends AnyFunSuite {
     val correctOutput = inputOutput.output
 
   test("Check proper JSON Conversion") {
-    val output = new jsonConvertor(testData).convert()
+    val output = new jsonConvertor(testData).convert("states_daily")
     assert(output === correctOutput)
   }
 
@@ -32,6 +32,6 @@ class main_Test extends AnyFunSuite {
   }
   
   test("Testing for getting list of stat code for the highest value for a property") {
-    assert(caseClassed(0).maxValueStates === List("kl"))
+    assert(caseClassed(0).maxValueStates === List("Kerala"))
   }
 }

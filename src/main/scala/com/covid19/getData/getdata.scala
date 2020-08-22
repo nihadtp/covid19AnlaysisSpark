@@ -14,23 +14,30 @@ object getdata {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
-  val url = "https://api.covid19india.org/states_daily.json"
+  private val urlStatesDaily = "https://api.covid19india.org/states_daily.json"
+  private val urlTestDaily = "https://api.covid19india.org/state_test_data.json"
 
-  def getResponse(): Future[String] = {
+  def getResponse(urlString: String): Future[String] = {
+
+    val url = urlString match {
+      case "states_daily" => urlStatesDaily
+      case "state_test_daily" => urlTestDaily
+    }
     val responseFuture: Future[HttpResponse] =
       Http().singleRequest(HttpRequest(uri = url))
     val entityFuture: Future[HttpEntity.Strict] =
-      responseFuture.flatMap(response => response.entity.toStrict(5.seconds))
+      responseFuture.flatMap(response => response.entity.toStrict(10.seconds))
     entityFuture.map(entity => entity.data.utf8String)
   }
 
-  def applyVal(): String = {
+  def applyVal(data: String): String = {
     var output: String = ""
-    getResponse.onComplete {
+    getResponse(data).onComplete {
+
       case Success(res) => output += res
-      case Failure(_)   => println("something wrong")
+      case Failure(_)   => println("Didn't get response from API for " + data)
     }
-    Thread.sleep(5000)
+    Thread.sleep(9000)
     output
   }
 

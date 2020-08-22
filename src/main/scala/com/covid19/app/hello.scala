@@ -6,13 +6,11 @@ import org.apache.spark.rdd._
 import org.apache.log4j._
 import covid19.getdata
 import covid19.jsonConvertor
-import covid19.dataStructure
 import covid19.allStatusData
 import covid19.Confirmed
 import covid19.Recovered
 import covid19.Deceased
-import covid19.Operations._
-import covid19.BadData
+import covid19.TotalTested
 import java.{util => ju}
 import _root_.java.io.InputStream
 import java.io.FileInputStream
@@ -21,38 +19,12 @@ import scala.math.pow
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.covid19.cassandra.cassandraMethods
+import covid19.stateTestDaily
+import com.covid19.app.RddOperations._
+import covid19.Output
+import covid19.BadData
 
 object hello {
-
-  def covidMap(
-      rdd1: RDD[allStatusData],
-      rdd2: RDD[allStatusData],
-      rdd3: RDD[allStatusData]
-  )(f: (Float, Float, Float) => Float): RDD[allStatusData] = {
-
-    /* Takes in 3 rdd of allStatus data get triple product and filter those having 
-    data available for same date*/
-    val cartesian = rdd1
-      .cartesian(rdd2)
-      .cartesian(rdd3)
-      .filter(triplet => {
-        val operand1 = triplet._1._1
-        val operand2 = triplet._1._2
-        val operand3 = triplet._2
-        val hasSameDate = operand1.dateValue.isEqual(operand2.dateValue) &&
-          operand2.dateValue.isEqual(operand3.dateValue)
-        hasSameDate
-      })
-
-    cartesian.map(data => {
-      val status1 = data._1._1
-      val status2 = data._1._2
-      val status3 = data._2
-
-      operate(status1, status2, status3)(f)
-    })
-
-  }
 
   def main(args: Array[String]) {
 
@@ -84,19 +56,62 @@ object hello {
 
     val sc = new SparkContext(conf)
     val connector = CassandraConnector(conf)
-    val data = getdata.applyVal()
-    val listOfParsedJson = new jsonConvertor(data).convert()
+    log.warn("Created spark context and cassandra connector")
 
-    val rdd = sc.parallelize(listOfParsedJson, 4)
-    val dataStruct = rdd.map(mapObject => {
+    // Get and convert states_daily_changes from API to List of Scala Map
+    val dataStatesDaily = getdata.applyVal("states_daily")
+
+    log.warn("Received API data for states daily")
+
+    val listOfParsedJsonStatesDaily =
+      new jsonConvertor(dataStatesDaily).convert("states_daily")
+      
+    log.warn("Received API data for states test daily")
+    // Get and convert states_test_daily from API to List of Scala Map
+
+    val dataTestDaily = getdata.applyVal("state_test_daily")
+    val listOfParsedJsonTestDaily =
+      new jsonConvertor(dataTestDaily).convert("states_tested_data")
+    log.warn("Converted to scala Objects")
+
+    // Converting both List Data to RDD
+
+    val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 4)
+    val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 4)
+    log.warn("Converted to RDD")
+
+    //Convert to RDD of abstract DataStruct
+
+    val dataStructTestDaily = rddTestDaily.map(mapObject => {
+      new stateTestDaily(mapObject)
+    })
+
+    log.warn("Created dataStructure for States Test data")
+
+    val dataStructStatesDaily = rddStatesDaily.map(mapObject => {
       val dataObject = new stateStatus(mapObject)
       dataObject
     })
-    log.warn("Created dataStructure")
+    log.warn("Created dataStructure for States Daily")
 
-    val confirmedRecoveredDeceased = dataStruct.map(data =>
+    // Creation of allStatus for test data
+
+    val allStatusTests = getAllStatusDataForTests(dataStructTestDaily).cache()
+
+    val totalTested = allStatusTests.filter(data => data match {
+      case TotalTested(_, _) => true
+      case _ => false
+    })
+
+    log.warn("Created allStatus for  State Test Daily Data")
+
+    // Created allStatusData for states Daily changes
+
+    val confirmedRecoveredDeceased = dataStructStatesDaily.map(data =>
       allStatusData(data.stateInfo.toMap, data.status, data.date)
-    )
+    ).cache()
+
+    log.warn("Created allStatus for States Daily")
 
     val confirmed = confirmedRecoveredDeceased
       .filter(data =>
@@ -105,7 +120,6 @@ object hello {
           case _               => false
         }
       )
-      .cache()
 
     val recovered = confirmedRecoveredDeceased
       .filter(data =>
@@ -114,7 +128,6 @@ object hello {
           case _               => false
         }
       )
-      .cache()
 
     val deceased = confirmedRecoveredDeceased
       .filter(data =>
@@ -123,21 +136,18 @@ object hello {
           case _              => false
         }
       )
-      .cache()
 
-    // Gives Number of (confirmed - recovered - deceased) for each day for all states 
-    val delta = covidMap(confirmed, recovered, deceased)((x, y, z) => x - y - z)
+    // Gives Number of (confirmed + deceased - recovered) for each day for all states
+    val effectiveIncreaseInCases = covidMap(confirmed, deceased, recovered)((x, y, z) => x + y - z)
 
-    //Gives (confirmed^2 - recovered^2 - deceased^2 / confirmed^2 + recovered^2 + deceased^2) for all states
+    val effectiveIncreasePerTest = covidMap(effectiveIncreaseInCases, totalTested)((x,y) => (x/y)*1000000.toFloat)
 
-    val delta_square = covidMap(confirmed, recovered, deceased)((x, y, z) => {
-      val f = x.toDouble; val s = y.toDouble; val t = z.toDouble;
-      (pow(f, 2) - pow(s, 2) - pow(t, 2)).toFloat / (math
-        .sqrt(pow(f, 2) + pow(s, 2) + pow(t, 2)))
-        .toFloat
+    effectiveIncreasePerTest.take(10).foreach(x => {
+      println(x.getStateValue.getOrElse("Kerala", "No key found") + " || " + x.getDate() + " || " + x.getProp())
     })
+    //Data write to cassandra
 
-    delta.foreachPartition(partition => {
+    effectiveIncreaseInCases.foreachPartition(partition => {
 
       val session = connector.openSession()
       partition.foreach(data => {
