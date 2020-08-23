@@ -13,6 +13,7 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder
 import com.datastax.oss.driver.api.querybuilder.term.Term
 import com.datastax.oss.protocol.internal.request.query.QueryOptions
+import com.datastax.oss.driver.internal.core.metadata.MetadataRefresh.Result
 
 object cassandraMethods {
 
@@ -38,8 +39,9 @@ object cassandraMethods {
         session.execute(
           """INSERT INTO "%s".%s ( state_code, state_value, date )
             VALUES ('%s', %s, '%s');"""
-            .format(keySpace, table, state_code, state_value, dateTime),
+            .format(keySpace, table, state_code, state_value, dateTime)
         )
+
       })
     } catch {
       case e: QueryValidationException =>

@@ -24,6 +24,8 @@ import com.covid19.cassandra.cassandraMethods
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader
 import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.ConfigFactory
+import com.datastax.dse.protocol.internal.request.query.DseQueryOptions
+import com.datastax.oss.driver.shaded.netty.handler.ssl.ApplicationProtocolConfig.Protocol
 
 
 object hello {
@@ -84,14 +86,14 @@ object hello {
          new SparkConf()
       .setMaster("local[*]")
       .setAppName("covid19")
-      .set("spark.cassandra.connection.host" ,"cassandra.us-east-2.amazonaws.com")
-      .set("spark.cassandra.connection.port", "9142")
-      .set("spark.cassandra.auth.username", "nihadTp-at-898924162355")
-      .set("spark.cassandra.auth.password", "simOjKszIzuDLvmy3EBdXjloYt/FzOoh1gviqVTaz4I=")
-      .set("spark.cassandra.connection.ssl.enabled", "true")
-      .set("spark.cassandra.connection.ssl.trustStore.path", "/home/nihad/.cassandra/cassandra_truststore.jks")
-      .set("spark.cassandra.connection.ssl.trustStore.password", "indiana_jones")
-      .set("spark.cassandra.output.consistency.level", "LOCAL_QUORUM")
+      // .set("spark.cassandra.connection.host" ,"cassandra.us-east-2.amazonaws.com")
+      // .set("spark.cassandra.connection.port", "9142")
+      // .set("spark.cassandra.auth.username", "nihadTp-at-898924162355")
+      // .set("spark.cassandra.auth.password", "simOjKszIzuDLvmy3EBdXjloYt/FzOoh1gviqVTaz4I=")
+      // .set("spark.cassandra.connection.ssl.enabled", "true")
+      // .set("spark.cassandra.connection.ssl.trustStore.path", "/home/nihad/.cassandra/cassandra_truststore.jks")
+      // .set("spark.cassandra.connection.ssl.trustStore.password", "indiana_jones")
+      // .set("spark.cassandra.output.consistency.level", "LOCAL_QUORUM")
       
       }
     }
@@ -102,15 +104,17 @@ object hello {
       case "local" => {
         val conf = sparkConf(arg)
         val connector = CassandraConnector(conf)
+        
         connector.openSession()
       }
 
       case "aws" => {
         val conf = sparkConf(arg)
         val connector = CassandraConnector(conf)
-        connector.openSession()
-        // val loader = DriverConfigLoader.fromClasspath("aws-cassandra.conf")
-        // CqlSession.builder().withConfigLoader(loader).build()     
+        
+        //connector.openSession()
+        val loader = DriverConfigLoader.fromClasspath("application.conf")
+        CqlSession.builder().withConfigLoader(loader).build()     
       }
       
     }
