@@ -8,6 +8,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption
+import _root_.java.io.InputStream
+import java.io.FileInputStream
+import org.apache.log4j.PropertyConfigurator
+import java.{util => ju}
 
 object utils {
 
@@ -37,5 +41,14 @@ object utils {
       }
 
     }
+  }
+
+  def log_init(): Unit = {
+    val inputForLog =
+      (new FileInputStream("src/main/resources/log4j.properties"))
+        .asInstanceOf[InputStream]
+
+    val property = new ju.Properties
+    PropertyConfigurator.configure(inputForLog)
   }
 }

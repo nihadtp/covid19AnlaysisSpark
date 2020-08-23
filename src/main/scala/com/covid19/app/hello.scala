@@ -11,9 +11,6 @@ import covid19.Confirmed
 import covid19.Recovered
 import covid19.Deceased
 import covid19.TotalTested
-import java.{util => ju}
-import _root_.java.io.InputStream
-import java.io.FileInputStream
 import covid19.stateStatus
 import scala.math.pow
 import com.datastax.spark.connector._
@@ -29,80 +26,62 @@ object hello {
 
   def main(args: Array[String]) {
 
-    // Logger.getLogger("org").setLevel(Level.ERROR)
+    // Initialized Apache Log configuration
+    log_init()
     val log = Logger.getRootLogger()
-    val inputForLog =
-      (new FileInputStream("src/main/resources/log4j.properties"))
-        .asInstanceOf[InputStream]
 
-    val property = new ju.Properties
-    property.load(inputForLog)
-    PropertyConfigurator.configure(inputForLog)
+    log.warn("Initialized Apache Log configuration and log variable")
 
     val conf = new SparkConf()
       .setMaster("local[*]")
       .setAppName("covid19")
     val sc = new SparkContext(conf)
-    val connector = CassandraConnector(conf)
-    log.warn("Created spark context and cassandra connector")
 
-    // Get and convert states_daily_changes from API to List of Scala Map
+    log.warn("Created spark context")
+
+    // Get data from state daily and state test data from API
     val dataStatesDaily = getdata.applyVal("states_daily")
+    val dataTestDaily = getdata.applyVal("state_test_daily")
 
-    log.warn("Received API data for states daily")
+    log.warn("Received API data for states daily changes and state test daily ")
 
+    // Convert API json data state daily and test daily to scala objects
     val listOfParsedJsonStatesDaily =
       new jsonConvertor(dataStatesDaily).convert("states_daily")
-
-    log.warn("Received API data for states test daily")
-    // Get and convert states_test_daily from API to List of Scala Map
-
-    val dataTestDaily = getdata.applyVal("state_test_daily")
     val listOfParsedJsonTestDaily =
       new jsonConvertor(dataTestDaily).convert("states_tested_data")
-    log.warn("Converted to scala Objects")
 
+    log.warn("Converted state daily and test daily API data to  Scala objects")
     // Converting both List Data to RDD
 
     val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 4)
     val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 4)
-    log.warn("Converted to RDD")
+    log.warn("Converted Scala objects to to RDD")
 
-    //Convert to RDD of abstract DataStruct
+    //Convert data from RDD of scala Object to RDD of Map objects
 
     val dataStructTestDaily = rddTestDaily.map(mapObject => {
       new stateTestDaily(mapObject)
     })
 
-    log.warn("Created dataStructure for States Test data")
-
     val dataStructStatesDaily = rddStatesDaily.map(mapObject => {
       val dataObject = new stateStatus(mapObject)
       dataObject
     })
-    log.warn("Created dataStructure for States Daily")
 
-    // Creation of allStatus for test data
+    log.warn("Convert state daily and test daily to RDD of Maps")
 
+    // Convert RDD of states daily and tests daily to a unified data structure RDD of allStatus
     val allStatusTests = getAllStatusDataForTests(dataStructTestDaily).cache()
-
-    val totalTested = allStatusTests.filter(data =>
-      data match {
-        case TotalTested(_, _) => true
-        case _                 => false
-      }
-    )
-
-    log.warn("Created allStatus for  State Test Daily Data")
-
-    // Created allStatusData for states Daily changes
-
     val confirmedRecoveredDeceased = dataStructStatesDaily
       .map(data => allStatusData(data.stateInfo.toMap, data.status, data.date))
       .cache()
 
-    log.warn("Created allStatus for States Daily")
+    log.warn(
+      "Converted RDD of states daily and states tests daily to a unified data structure. RDD of allStatus"
+    )
 
+    // Extracting Confirmed data for individual states for individual day till current day
     val confirmed = confirmedRecoveredDeceased
       .filter(data =>
         data match {
@@ -111,6 +90,7 @@ object hello {
         }
       )
 
+    // Extracting Recovered data for individual states for individual day till current day
     val recovered = confirmedRecoveredDeceased
       .filter(data =>
         data match {
@@ -119,6 +99,7 @@ object hello {
         }
       )
 
+    // Extracting Deceased data for individual states for individual day till current day
     val deceased = confirmedRecoveredDeceased
       .filter(data =>
         data match {
@@ -127,26 +108,41 @@ object hello {
         }
       )
 
-    // Gives Number of (confirmed + deceased - recovered) for each day for all states
+    // Extracting Number of people tested data for individual states for individual day till current day
+    val totalTested = allStatusTests.filter(data =>
+      data match {
+        case TotalTested(_, _) => true
+        case _                 => false
+      }
+    )
+
+    log.warn(
+      "Extracted confirmed, recovered, deceased and total number of people tested data for all states till current day"
+    )
+
+    // Calculated effective increase in cases per day [(confirmed cases + deceased - recovered)]
     val effectiveIncreaseInCases =
       covidMap(confirmed, deceased, recovered)((x, y, z) => x + y - z)
 
-    val effectiveIncreasePerTest =
+    log.warn(
+      "Calculated effective increase in cases per day (Confirmed + Deceased - Recovered)"
+    )
+
+    // Calculated effectiveIncrease in cases per Million tests [(effectiveIncreaseInCases / totalTested)*1000000]
+    val effectiveIncreasePerMillionTests =
       covidMap(effectiveIncreaseInCases, totalTested)((x, y) =>
         (x / y) * 1000000.toFloat
       )
 
-    effectiveIncreasePerTest
-      .take(10)
-      .foreach(x => {
-        println(
-          x.getStateValue.getOrElse("Kerala", "No key found") + " || " + x
-            .getDate() + " || " + x.getProp()
-        )
-      })
-    //Data write to cassandra
+    log.warn(
+      "Calculated effective increase in cases per million tests per day (effectiveIncreaseInCases / totalTested)*1000000"
+    )
 
-    effectiveIncreaseInCases.foreachPartition(partition => {
+    log.warn(
+      "Starting writing results to cassandra. Schema -> (state_code, state_value, date)"
+    )
+
+    effectiveIncreasePerMillionTests.foreachPartition(partition => {
 
       val session = createSession(args(0))
       partition.foreach(data => {
@@ -155,7 +151,9 @@ object hello {
       session.close()
     })
 
-    log.warn("Data write to cassandra is completed. Can cancel execution now.")
+    log.warn(
+      "Data write to cassandra is completed and cassandra session is closed"
+    )
 
     sc.stop()
 
