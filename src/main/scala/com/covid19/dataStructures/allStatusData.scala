@@ -13,11 +13,13 @@ abstract class allStatusData(
   def getStateValue: Map[String, Float] = stateCodeValueMap
   def dateValue: DateTime = date
 
-  def maxValue: Float = {
-    if (stateCodeValueMap.contains("tt"))
-      stateCodeValueMap.-("tt").valuesIterator.max
-    else stateCodeValueMap.valuesIterator.max
-  }
+  // Return max value among given states for a given property on a given date.
+  def maxValue: Float = stateCodeValueMap.valuesIterator.maxBy(x => x match {
+      case Float.NaN => Float.NegativeInfinity
+      case _ => x
+    })
+
+  // Return List of states that returns max value for a given property on a given date.
 
   def maxValueStates: List[String] = {
     var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]()
@@ -34,12 +36,13 @@ abstract class allStatusData(
     g.getOrElse(maxValue, List(""))
   }
 
-  def minValue: Float = {
-    if (stateCodeValueMap.contains("tt"))
-      stateCodeValueMap.-("tt").valuesIterator.min
-    else stateCodeValueMap.valuesIterator.min
-  }
+  // Return min value among states among all the states for a given property on a given date.
+  def minValue: Float = stateCodeValueMap.valuesIterator.minBy(x => x match {
+      case Float.NaN => Float.PositiveInfinity
+      case _ => x
+    })
 
+  //Return List of states that has min value for a given property on a given date.
   def minValueStates: List[String] = {
     var listOfTuples = scala.collection.mutable.ListBuffer[(String, Float)]()
 
@@ -62,6 +65,20 @@ case class Deceased(stateCodeValueMap: Map[String, Float], date: DateTime)
     extends allStatusData(stateCodeValueMap, "Deceased", date)
 case class Recovered(stateCodeValueMap: Map[String, Float], date: DateTime)
     extends allStatusData(stateCodeValueMap, "Recovered", date)
+case class Positive(stateCodeValueMap: Map[String, Float], date: DateTime)
+    extends allStatusData(stateCodeValueMap, "Positive", date)
+case class Negative(stateCodeValueMap: Map[String, Float], date: DateTime)
+    extends allStatusData(stateCodeValueMap, "Negative", date)
+case class Population(stateCodeValueMap: Map[String, Float], date: DateTime)
+    extends allStatusData(stateCodeValueMap, "Population", date)
+case class InQuarantine(stateCodeValueMap: Map[String, Float], date: DateTime)
+    extends allStatusData(stateCodeValueMap, "InQuarantine", date)
+case class ReleasedFromQuarantine(
+    stateCodeValueMap: Map[String, Float],
+    date: DateTime
+) extends allStatusData(stateCodeValueMap, "ReleasedFromQuarantine", date)
+case class TotalTested(stateCodeValueMap: Map[String, Float], date: DateTime)
+    extends allStatusData(stateCodeValueMap, "TotalTested", date)
 case class BadData(
     stateCodeValueMap: Map[String, Float],
     prop: String,
@@ -80,10 +97,16 @@ object allStatusData {
       date: DateTime
   ): allStatusData =
     prop match {
-      case "Confirmed" => new Confirmed(stateCodeValueMap, date)
-      case "Deceased"  => new Deceased(stateCodeValueMap, date)
-      case "Recovered" => new Recovered(stateCodeValueMap, date)
-      case "BadData"   => new BadData(stateCodeValueMap, prop, date)
-      case _           => new Output(stateCodeValueMap, prop, date)
+      case "Confirmed"    => new Confirmed(stateCodeValueMap, date)
+      case "Deceased"     => new Deceased(stateCodeValueMap, date)
+      case "Recovered"    => new Recovered(stateCodeValueMap, date)
+      case "Positive"     => new Positive(stateCodeValueMap, date)
+      case "Negative"     => new Negative(stateCodeValueMap, date)
+      case "Population"   => new Population(stateCodeValueMap, date)
+      case "InQuarantine" => new InQuarantine(stateCodeValueMap, date)
+      case "ReleasedFromQuarantine" =>
+        new ReleasedFromQuarantine(stateCodeValueMap, date)
+      case "TotalTested" => new TotalTested(stateCodeValueMap, date)
+      case _             => new Output(stateCodeValueMap, prop, date)
     }
 }

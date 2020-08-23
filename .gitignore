@@ -3,5 +3,5 @@
 .metals
 target/*
 .scalafmt.conf
-src/main/resources/aws-cassandra.conf
+src/main/resources/application.conf
 project
