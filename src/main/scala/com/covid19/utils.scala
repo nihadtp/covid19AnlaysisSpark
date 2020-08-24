@@ -1,8 +1,6 @@
 package com.covid19
 
 import org.joda.time.DateTime
-import com.datastax.oss.driver.api.core.config.DriverConfigLoader
-import com.datastax.spark.connector.cql.CassandraConnector
 import com.datastax.oss.driver.api.core.CqlSession
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -23,7 +21,7 @@ object utils {
     application.withFallback(reference)
   }
 
-  def createSession(arg: String) = {
+  def createSession(arg: String): CqlSession = {
     arg match {
       case "local" => {
         val loader = new DefaultDriverConfigLoader(() =>
@@ -44,11 +42,11 @@ object utils {
   }
 
   def log_init(): Unit = {
-    val inputForLog =
-      (new FileInputStream("src/main/resources/log4j.properties"))
-        .asInstanceOf[InputStream]
+    // val inputForLog =
+    //   (new FileInputStream("src/main/resources/log4j.properties"))
+    //     .asInstanceOf[InputStream]
 
-    val property = new ju.Properties
-    PropertyConfigurator.configure(inputForLog)
+    val f = getClass().getResource("/log4j.properties")
+    PropertyConfigurator.configure(f.openStream())
   }
 }

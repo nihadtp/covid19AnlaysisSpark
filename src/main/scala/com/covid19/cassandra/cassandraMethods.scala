@@ -31,10 +31,10 @@ object cassandraMethods {
         val state_code = kv._1
         val state_value = kv._2
         
-        log.warn(
-          "Writing %s state code with value %s on date %s"
-            .format(state_code, state_value, dateTime)
-        )
+        // log.warn(
+        //   "Writing %s state code with value %s on date %s"
+        //     .format(state_code, state_value, dateTime)
+        // )
         
         session.execute(
           """INSERT INTO "%s".%s ( state_code, state_value, date )

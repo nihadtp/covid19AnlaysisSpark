@@ -141,8 +141,8 @@ object hello {
     log.warn(
       "Starting writing results to cassandra. Schema -> (state_code, state_value, date)"
     )
-
-    effectiveIncreasePerMillionTests.foreachPartition(partition => {
+       
+    effectiveIncreaseInCases.repartition(4).foreachPartition(partition => {
 
       val session = createSession(args(0))
       partition.foreach(data => {
