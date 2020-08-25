@@ -12,7 +12,6 @@ import covid19.Recovered
 import covid19.Deceased
 import covid19.TotalTested
 import covid19.stateStatus
-import scala.math.pow
 import com.datastax.spark.connector._
 import com.datastax.spark.connector.cql.CassandraConnector
 import com.covid19.cassandra.cassandraMethods
@@ -33,15 +32,16 @@ object hello {
     log.warn("Initialized Apache Log configuration and log variable")
 
     val conf = new SparkConf()
-      .setMaster("local[*]")
+     // .setMaster("local[*]")
       .setAppName("covid19")
     val sc = new SparkContext(conf)
 
     log.warn("Created spark context")
 
     // Get data from state daily and state test data from API
-    val dataStatesDaily = getdata.applyVal("states_daily")
-    val dataTestDaily = getdata.applyVal("state_test_daily")
+    val dataStatesDaily = getdata.getDataFromAPI("states_daily")
+    
+    val dataTestDaily = getdata.getDataFromAPI("state_test_daily")
 
     log.warn("Received API data for states daily changes and state test daily ")
 

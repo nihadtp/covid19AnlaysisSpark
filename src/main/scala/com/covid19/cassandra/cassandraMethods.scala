@@ -1,6 +1,5 @@
 package com.covid19.cassandra
 
-import com.datastax.spark.connector.cql.CassandraConnector
 import covid19.allStatusData
 import java.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormat
@@ -10,10 +9,7 @@ import com.datastax.spark.connector.CassandraSparkExtensions
 import com.datastax.oss.driver.api.core.DriverException
 import com.datastax.oss.driver.api.core.NoNodeAvailableException
 import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder
-import com.datastax.oss.driver.api.querybuilder.term.Term
-import com.datastax.oss.protocol.internal.request.query.QueryOptions
-import com.datastax.oss.driver.internal.core.metadata.MetadataRefresh.Result
+
 
 object cassandraMethods {
 
