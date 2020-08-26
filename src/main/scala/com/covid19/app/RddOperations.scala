@@ -67,7 +67,8 @@ object RddOperations {
   // Tertiary Operation for allStatusData type
   def covidMap(
       rdd1: RDD[allStatusData],
-      rdd2: RDD[allStatusData]
+      rdd2: RDD[allStatusData],
+      prop: String
   )(f: (Float, Float) => Float): RDD[allStatusData] = {
 
     /* Takes in 3 rdd of allStatus data get triple product and filter those having
@@ -85,7 +86,7 @@ object RddOperations {
       val status1 = data._1
       val status2 = data._2
       //println(status1.getDate() + " for " + status1.getProp() + " AND " + status2.getDate() + " for " + status2.getProp())
-      operate(status1, status2)(f)
+      operate(status1, status2, prop)(f)
     })
 
   }
@@ -93,7 +94,8 @@ object RddOperations {
   def covidMap(
       rdd1: RDD[allStatusData],
       rdd2: RDD[allStatusData],
-      rdd3: RDD[allStatusData]
+      rdd3: RDD[allStatusData],
+      prop: String
   )(f: (Float, Float, Float) => Float): RDD[allStatusData] = {
 
     /* Takes in 3 rdd of allStatus data get triple product and filter those having
@@ -115,7 +117,7 @@ object RddOperations {
       val status2 = data._1._2
       val status3 = data._2
 
-      operate(status1, status2, status3)(f)
+      operate(status1, status2, status3, prop)(f)
     })
 
   }

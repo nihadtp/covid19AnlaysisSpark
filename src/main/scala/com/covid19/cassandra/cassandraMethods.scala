@@ -15,12 +15,13 @@ object cassandraMethods {
 
   val log = Logger.getRootLogger()
   val keySpace = "covid19"
-  val table = "delta_by_states"
+  val table = "state_data"
   val formatter = DateTimeFormat.forPattern("YYYY-MM-dd")
 
   def cassandraWrite(session: CqlSession, data: allStatusData): Unit = {
     val stateCode = data.getStateValue
     val dateTime = (data.dateValue).toString(formatter)
+    val stateProp = data.getProp()
 
     try {
       stateCode.foreach(kv => {
@@ -33,9 +34,9 @@ object cassandraMethods {
         // )
         
         session.execute(
-          """INSERT INTO "%s".%s ( state_code, state_value, date )
-            VALUES ('%s', %s, '%s');"""
-            .format(keySpace, table, state_code, state_value, dateTime)
+          """INSERT INTO "%s".%s ( state_code, state_value, date, property )
+            VALUES ('%s', %s, '%s', '%s');"""
+            .format(keySpace, table, state_code, state_value, dateTime, stateProp)
         )
 
       })

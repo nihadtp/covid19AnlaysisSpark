@@ -44,22 +44,22 @@ trait Operations[A] {
     WestBengal -> Float.NaN
   )
 
-  def operate(op1: A, op2: A, op3: A)(f: (Float, Float, Float) => Float): A
-  def operate(op1: A, op2: A)(f: (Float, Float) => Float): A
+  def operate(op1: A, op2: A, op3: A, prop: String)(f: (Float, Float, Float) => Float): A
+  def operate(op1: A, op2: A, prop: String)(f: (Float, Float) => Float): A
 }
 
 object Operations {
   val log = Logger.getRootLogger()
 
   // Implicit declaration for 3 parameter allStatus Type method
-  def operate[A](op1: A, op2: A, op3: A)(f: (Float, Float, Float) => Float)(
+  def operate[A](op1: A, op2: A, op3: A, prop: String)(f: (Float, Float, Float) => Float)(
       implicit d: Operations[A]
-  ) = d.operate(op1, op2, op3)(f)
+  ) = d.operate(op1, op2, op3, prop)(f)
 
   // Implicit declaration for 2 parameter allStatus type method
-  def operate[A](op1: A, op2: A)(f: (Float, Float) => Float)(implicit
+  def operate[A](op1: A, op2: A, prop: String)(f: (Float, Float) => Float)(implicit
       d: Operations[A]
-  ) = d.operate(op1, op2)(f)
+  ) = d.operate(op1, op2, prop)(f)
 
   // Method Implementation
   implicit lazy val operateForAllStatusData: Operations[allStatusData] =
@@ -69,7 +69,7 @@ object Operations {
          Function is intended to do mathematical operation between 3 values for same state
          on same date.
        */
-      def operate(op1: allStatusData, op2: allStatusData, op3: allStatusData)(
+      def operate(op1: allStatusData, op2: allStatusData, op3: allStatusData, prop: String)(
           f: (Float, Float, Float) => Float
       ): allStatusData = {
 
@@ -94,11 +94,11 @@ object Operations {
           }
           (stateCode -> result.toFloat)
         })
-        new Output(stateValue, "operate3", op1.dateValue)
+        new Output(stateValue, prop, op1.dateValue)
       }
 
       /* This method is same as above but for binary operation instead of tertiary */
-      def operate(op1: allStatusData, op2: allStatusData)(
+      def operate(op1: allStatusData, op2: allStatusData, prop: String)(
           f: (Float, Float) => Float
       ): allStatusData = {
         val op1StateCodeMap = op1.getStateValue
@@ -117,7 +117,7 @@ object Operations {
           }
           (stateCode -> result.toFloat)
         })
-        new Output(stateValue, "operate2", op1.dateValue)
+        new Output(stateValue, prop, op1.dateValue)
       }
     }
 }

@@ -32,7 +32,7 @@ object hello {
     log.warn("Initialized Apache Log configuration and log variable")
 
     val conf = new SparkConf()
-     // .setMaster("local[*]")
+      .setMaster("local[*]")
       .setAppName("covid19")
     val sc = new SparkContext(conf)
 
@@ -122,7 +122,7 @@ object hello {
 
     // Calculated effective increase in cases per day [(confirmed cases + deceased - recovered)]
     val effectiveIncreaseInCases =
-      covidMap(confirmed, deceased, recovered)((x, y, z) => x + y - z)
+      covidMap(confirmed, deceased, recovered, "effectiveIncrease")((x, y, z) => x + y - z)
 
     log.warn(
       "Calculated effective increase in cases per day (Confirmed + Deceased - Recovered)"
@@ -130,7 +130,7 @@ object hello {
 
     // Calculated effectiveIncrease in cases per Million tests [(effectiveIncreaseInCases / totalTested)*1000000]
     val effectiveIncreasePerMillionTests =
-      covidMap(effectiveIncreaseInCases, totalTested)((x, y) =>
+      covidMap(effectiveIncreaseInCases, totalTested, "effectiveIncreasePerMillionTest")((x, y) =>
         (x / y) * 1000000.toFloat
       )
 
@@ -142,7 +142,16 @@ object hello {
       "Starting writing results to cassandra. Schema -> (state_code, state_value, date)"
     )
        
-    effectiveIncreaseInCases.repartition(4).foreachPartition(partition => {
+    effectiveIncreaseInCases.foreachPartition(partition => {
+
+      val session = createSession(args(0))
+      partition.foreach(data => {
+        cassandraMethods.cassandraWrite(session, data)
+      })
+      session.close()
+    })
+
+    effectiveIncreasePerMillionTests.foreachPartition(partition => {
 
       val session = createSession(args(0))
       partition.foreach(data => {
@@ -158,4 +167,6 @@ object hello {
     sc.stop()
 
   }
+
+  
 }
