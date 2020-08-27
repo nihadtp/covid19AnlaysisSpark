@@ -139,7 +139,7 @@ object hello {
     )
 
     log.warn(
-      "Starting writing results to cassandra. Schema -> (state_code, state_value, date)"
+      "Started writing results to cassandra for effective increase in cases"
     )
        
     effectiveIncreaseInCases.foreachPartition(partition => {
@@ -150,6 +150,10 @@ object hello {
       })
       session.close()
     })
+
+    log.warn(
+      "Started writing results to cassandra for effective increase in cases per Million"
+    )
 
     effectiveIncreasePerMillionTests.foreachPartition(partition => {
 
