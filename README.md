@@ -5,7 +5,13 @@ using a unified data structure and a trait method. After processing data it then
 follows:
 
   - Effective Increases in covid-19 Cases for all states per day
+
+  ![Image 1](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_35_08.png)
+
   - Effective Increases in covid-19 Cases per total tests for all states per day
+
+  ![Image 2]
+    (https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_40_27.png)
 
 ### Primary data source
 
@@ -85,6 +91,7 @@ cqlsh> SELECT * FROM covid19.state_data LIMIT 100;
 ```
 ## Running on Amazon EMR Cluster with Amazon Keyspace
 
-
 TODO
+
+
 
