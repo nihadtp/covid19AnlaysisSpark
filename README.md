@@ -5,12 +5,13 @@ using a unified data structure and a trait method. After processing data it then
 follows:
 
   - Effective Increases in covid-19 Cases for all states per day
-
   ![Image 1](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_35_08.png)
-
   - Effective Increases in covid-19 Cases per total tests for all states per day
-
   ![Image 2](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_40_27.png)
+  - Effective increase for state kerala
+  [Image 3](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_41_45.png)
+  - Effective increase per million for state of Kerala
+  [Image 4](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-11_40_36.png)
 
 ### Primary data source
 
