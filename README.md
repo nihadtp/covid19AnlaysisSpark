@@ -10,8 +10,7 @@ follows:
 
   - Effective Increases in covid-19 Cases per total tests for all states per day
 
-  ![Image 2]
-    (https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_40_27.png)
+  ![Image 2](https://imagehosting.s3.us-east-2.amazonaws.com/screencapture-localhost-8080-2020-08-27-10_40_27.png)
 
 ### Primary data source
 
