@@ -12,8 +12,6 @@ import covid19.Recovered
 import covid19.Deceased
 import covid19.TotalTested
 import covid19.stateStatus
-import com.datastax.spark.connector._
-import com.covid19.cassandra.cassandraMethods
 import covid19.stateTestDaily
 import com.covid19.app.RddOperations._
 import covid19.Output
@@ -141,30 +139,25 @@ object hello {
       "Started writing results to cassandra for effective increase in cases"
     )
        
-    effectiveIncreaseInCases.foreachPartition(partition => {
-
-      val session = createSession(args(0))
-      val cassandraWriterObj = new cassandraMethods(session)
-      partition.foreach(data => {
-        cassandraWriterObj.cassandraWriteForStateData(data)
-      })
-      session.close()
-    })
+    writeToStateTable(effectiveIncreaseInCases, args)
 
     log.warn(
       "Started writing results to cassandra for effective increase in cases per Million"
     )
 
-    effectiveIncreasePerMillionTests.foreachPartition(partition => {
+    writeToStateTable(effectiveIncreasePerMillionTests, args)
 
-      val session = createSession(args(0))
-      val cassandraWriterObj = new cassandraMethods(session)
-      partition.foreach(data => {
-        cassandraWriterObj.cassandraWriteForStateData(data)
-      })
-      session.close()
-    })
+    log.warn(
+      "Started writing results to cassandra country stat table for Confirmed cases"
+    )
 
+    writeToCountryTable(confirmed, args)
+
+    log.warn(
+      "Started writing results to cassandra country stat table for Deceased cases"
+    )
+
+    writeToCountryTable(deceased, args)
     log.warn(
       "Data write to cassandra is completed and cassandra session is closed"
     )

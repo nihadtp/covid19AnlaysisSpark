@@ -4,6 +4,9 @@ import org.apache.spark.rdd.RDD
 import covid19.stateTestDaily
 import covid19.allStatusData
 import covid19.Operations._
+import com.covid19.cassandra.cassandraMethods
+import com.covid19.utils._
+
 
 object RddOperations {
 
@@ -120,6 +123,30 @@ object RddOperations {
       operate(status1, status2, status3, prop)(f)
     })
 
+  }
+
+  def writeToStateTable(data: RDD[allStatusData], args: Array[String]): Unit = {
+   data.foreachPartition(partition => {
+
+      val session = createSession(args(0))
+      val cassandraWriterObj = new cassandraMethods(session)
+      partition.foreach(data => {
+        cassandraWriterObj.cassandraWriteForStateData(data)
+      })
+      session.close()
+    }) 
+  }
+
+  def writeToCountryTable(data: RDD[allStatusData], args: Array[String]): Unit = {
+   data.foreachPartition(partition => {
+
+      val session = createSession(args(0))
+      val cassandraWriterObj = new cassandraMethods(session)
+      partition.foreach(data => {
+        cassandraWriterObj.cassandraWriteForCountryStat(data)
+      })
+      session.close()
+    }) 
   }
 
 }
