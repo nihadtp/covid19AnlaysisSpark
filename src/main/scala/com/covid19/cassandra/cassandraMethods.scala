@@ -11,14 +11,14 @@ import com.datastax.oss.driver.api.core.NoNodeAvailableException
 import com.datastax.oss.driver.api.core.CqlSession
 
 
-object cassandraMethods {
+class cassandraMethods(val session: CqlSession) extends Serializable{
 
   val log = Logger.getRootLogger()
   val keySpace = "covid19"
-  val table = "state_data"
+  val stateTable = "state_data"
   val formatter = DateTimeFormat.forPattern("YYYY-MM-dd")
 
-  def cassandraWrite(session: CqlSession, data: allStatusData): Unit = {
+  def cassandraWriteForStateData(data: allStatusData): Unit = {
     val stateCode = data.getStateValue
     val dateTime = (data.dateValue).toString(formatter)
     val stateProp = data.getProp()
@@ -36,7 +36,7 @@ object cassandraMethods {
         session.execute(
           """INSERT INTO "%s".%s ( state_code, state_value, date, property )
             VALUES ('%s', %s, '%s', '%s');"""
-            .format(keySpace, table, state_code, state_value, dateTime, stateProp)
+            .format(keySpace, stateTable, state_code, state_value, dateTime, stateProp)
         )
 
       })

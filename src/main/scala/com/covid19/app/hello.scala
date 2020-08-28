@@ -13,7 +13,6 @@ import covid19.Deceased
 import covid19.TotalTested
 import covid19.stateStatus
 import com.datastax.spark.connector._
-import com.datastax.spark.connector.cql.CassandraConnector
 import com.covid19.cassandra.cassandraMethods
 import covid19.stateTestDaily
 import com.covid19.app.RddOperations._
@@ -145,8 +144,9 @@ object hello {
     effectiveIncreaseInCases.foreachPartition(partition => {
 
       val session = createSession(args(0))
+      val cassandraWriterObj = new cassandraMethods(session)
       partition.foreach(data => {
-        cassandraMethods.cassandraWrite(session, data)
+        cassandraWriterObj.cassandraWriteForStateData(data)
       })
       session.close()
     })
@@ -158,8 +158,9 @@ object hello {
     effectiveIncreasePerMillionTests.foreachPartition(partition => {
 
       val session = createSession(args(0))
+      val cassandraWriterObj = new cassandraMethods(session)
       partition.foreach(data => {
-        cassandraMethods.cassandraWrite(session, data)
+        cassandraWriterObj.cassandraWriteForStateData(data)
       })
       session.close()
     })
