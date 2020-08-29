@@ -51,8 +51,8 @@ object hello {
     log.warn("Converted state daily and test daily API data to  Scala objects")
     // Converting both List Data to RDD
 
-    val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 4)
-    val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 4)
+    val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 12)
+    val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 12)
     log.warn("Converted Scala objects to to RDD")
 
     //Convert data from RDD of scala Object to RDD of Map objects
@@ -139,6 +139,7 @@ object hello {
       "Started writing results to cassandra for effective increase in cases"
     )
        
+   
     writeToStateTable(effectiveIncreaseInCases, args)
 
     log.warn(
@@ -153,11 +154,25 @@ object hello {
 
     writeToCountryTable(confirmed, args)
 
-    log.warn(
+   log.warn(
       "Started writing results to cassandra country stat table for Deceased cases"
     )
 
-    writeToCountryTable(deceased, args)
+
+    writeToCountryTable(recovered, args)
+
+    log.warn(
+      "Started writing results to cassandra country stat table for Recovered cases"
+    )
+
+    
+
+   writeToCountryTable(deceased, args)
+
+   log.warn("Started writing results to cassandra country stat table for Effective Increase cases")
+
+   writeToCountryTable(effectiveIncreaseInCases, args)
+   
     log.warn(
       "Data write to cassandra is completed and cassandra session is closed"
     )

@@ -32,15 +32,15 @@ class cassandraMethods(session: CqlSession) extends Serializable {
     val dateTime = (data.dateValue).toString(formatter)
     val stateProp = data.getProp()
 
+    log.warn(
+      "Writing state data for date %s"
+        .format(dateTime)
+    )
+
     try {
       stateCode.foreach(kv => {
         val state_code = kv._1
         val state_value = kv._2
-
-        // log.warn(
-        //   "Writing %s state code with value %s on date %s"
-        //     .format(state_code, state_value, dateTime)
-        // )
 
         session.execute(
           """INSERT INTO "%s".%s ( state_code, state_value, date, property )
@@ -66,33 +66,50 @@ class cassandraMethods(session: CqlSession) extends Serializable {
     val stateProp = data.getProp()
     val maxVal = data.maxValue
     val minVal = data.minValue
-    val maxValStates = data.maxValueStates.foldLeft("")((x, y) => x + " | " + y)
-    val minValStates = data.minValueStates.foldLeft("")((x, y) => x + " | " + y)
+    val maxValStates = data.maxValueStates
+    val minValStates = data.minValueStates
+
+    log.warn(
+      "Writing country data for date %s"
+        .format(dateTime)
+    )
+
     try {
-      session.execute(
-        """INSERT INTO "%s".%s (state_prop, country_prop, date, states, value ) 
-            VALUES ('%s', 'maxVal', '%s', '%s', %s);
+
+      maxValStates.foreach(state => {
+
+        session.execute(
+        """INSERT INTO "%s".%s (state_prop, country_prop, date, state, value, uuid ) 
+            VALUES ('%s', 'maxVal', '%s', '%s', %s, uuid());
       """.format(
           keySpace,
           countryTable,
           stateProp,
           dateTime,
-          maxValStates,
+          state,
           maxVal
         )
       )
 
-      session.execute(
-        """INSERT INTO "%s".%s (state_prop, country_prop, date, states, value ) VALUES ('%s', 'minVal', '%s', '%s', %s);
+      })
+
+      minValStates.foreach(state => {
+
+        session.execute(
+        """INSERT INTO "%s".%s (state_prop, country_prop, date, state, value, uuid ) 
+            VALUES ('%s', 'minVal', '%s', '%s', %s, uuid());
       """.format(
           keySpace,
           countryTable,
           stateProp,
           dateTime,
-          minValStates,
-          minVal
+          state,
+          maxVal
         )
       )
+
+      })
+
     } catch {
       case e: Exception => exception(e)
     }
