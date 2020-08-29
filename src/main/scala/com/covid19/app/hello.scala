@@ -12,9 +12,6 @@ import covid19.Recovered
 import covid19.Deceased
 import covid19.TotalTested
 import covid19.stateStatus
-import com.datastax.spark.connector._
-import com.datastax.spark.connector.cql.CassandraConnector
-import com.covid19.cassandra.cassandraMethods
 import covid19.stateTestDaily
 import com.covid19.app.RddOperations._
 import covid19.Output
@@ -54,8 +51,8 @@ object hello {
     log.warn("Converted state daily and test daily API data to  Scala objects")
     // Converting both List Data to RDD
 
-    val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 4)
-    val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 4)
+    val rddTestDaily = sc.parallelize(listOfParsedJsonTestDaily, 12)
+    val rddStatesDaily = sc.parallelize(listOfParsedJsonStatesDaily, 12)
     log.warn("Converted Scala objects to to RDD")
 
     //Convert data from RDD of scala Object to RDD of Map objects
@@ -142,28 +139,40 @@ object hello {
       "Started writing results to cassandra for effective increase in cases"
     )
        
-    effectiveIncreaseInCases.foreachPartition(partition => {
-
-      val session = createSession(args(0))
-      partition.foreach(data => {
-        cassandraMethods.cassandraWrite(session, data)
-      })
-      session.close()
-    })
+   
+    writeToStateTable(effectiveIncreaseInCases, args)
 
     log.warn(
       "Started writing results to cassandra for effective increase in cases per Million"
     )
 
-    effectiveIncreasePerMillionTests.foreachPartition(partition => {
+    writeToStateTable(effectiveIncreasePerMillionTests, args)
 
-      val session = createSession(args(0))
-      partition.foreach(data => {
-        cassandraMethods.cassandraWrite(session, data)
-      })
-      session.close()
-    })
+    log.warn(
+      "Started writing results to cassandra country stat table for Confirmed cases"
+    )
 
+    writeToCountryTable(confirmed, args)
+
+   log.warn(
+      "Started writing results to cassandra country stat table for Deceased cases"
+    )
+
+
+    writeToCountryTable(recovered, args)
+
+    log.warn(
+      "Started writing results to cassandra country stat table for Recovered cases"
+    )
+
+    
+
+   writeToCountryTable(deceased, args)
+
+   log.warn("Started writing results to cassandra country stat table for Effective Increase cases")
+
+   writeToCountryTable(effectiveIncreaseInCases, args)
+   
     log.warn(
       "Data write to cassandra is completed and cassandra session is closed"
     )

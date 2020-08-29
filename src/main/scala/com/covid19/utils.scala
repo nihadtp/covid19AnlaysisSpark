@@ -7,6 +7,7 @@ import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfig
 import org.apache.log4j.PropertyConfigurator
 import java.{util => ju}
 
+
 object utils {
 
   def loadConfig(config: String): Config = {
@@ -42,4 +43,5 @@ object utils {
     val f = getClass().getResource("/log4j.properties")
     PropertyConfigurator.configure(f.openStream())
   }
+
 }
