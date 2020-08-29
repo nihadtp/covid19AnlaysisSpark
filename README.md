@@ -89,6 +89,7 @@ $ sudo service cassandra stop
 ## Running locally
 
 - git clone from master
+- Rename sample-cassandra.conf inside src/main/resources folder to application.conf. Update correct values under local_cassandra object.
 - start cassandra service
 
 ```sh
@@ -105,4 +106,31 @@ cqlsh> SELECT * FROM covid19.state_data LIMIT 100;
 
 ## Running on Amazon EMR Cluster with Amazon Keyspace
 
-TODO
+- Create Amazon AWS account and create an EMR instance referring this AWS Doc [here](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-gs.html)
+- Set up Amazon Keyspace using this doc [here](https://docs.aws.amazon.com/keyspaces/latest/devguide/getting-started.html)
+- Rename sample-cassandra.conf inside src/main/resources folder to application.conf. Update correct values under amazon_cassandra object.
+- Go to project folder in your local system and build JAR file.
+
+```sh
+sbt assembly
+```
+
+- SSH into EMR master node instance and set up cassandra trustore file.
+
+This would generate a covid19-assembly-0.1.0-SNAPSHOT.jar file in src/target folder.
+
+- Create an Amazon S3 bucket referring to doc [here](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/create-bucket.html)
+- Upload covid19-assembly-0.1.0-SNAPSHOT.jar to S3 bucket.
+- Start and ssh to EMR instance and download jar file from S3 bucket.
+
+```sh
+aws s3 cp your_s3_path ./
+```
+
+- execure spark submit commanf
+
+```sh
+spark-submit covid19-assembly-0.1.0-SNAPSHOT.jar aws
+```
+
+This would run the spark app and writing data to Amazon Keyspaces.
