@@ -4,4 +4,6 @@
 target/*
 .scalafmt.conf
 src/main/resources/application.conf
-project
+project/*
+!project/assembly.sbt
+!project/build.properties
